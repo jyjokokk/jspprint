@@ -6,6 +6,8 @@ from typing import Any
 
 from rich.console import Console
 
+console = Console()
+
 
 def read_json(file_path: str | None = None) -> dict:
     """Read JSON from a file path or stdin if no path is given."""
@@ -17,9 +19,6 @@ def read_json(file_path: str | None = None) -> dict:
         return json.load(sys.stdin)
 
     raise ValueError("No input provided. Pass a file path or pipe JSON via stdin.")
-
-
-console = Console()
 
 
 def print_json(data: dict, pretty: bool = True) -> None:

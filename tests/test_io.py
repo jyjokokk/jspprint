@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from jsp.io import filter_by_key, print_json
+from jsp.io import filter_by_key, print_json, update_json
 
 
 class TestFilterByKey:
@@ -44,6 +44,48 @@ class TestFilterByKey:
     def test_returns_subtree(self):
         data = {"a": {"b": {"c": 1, "d": 2}}}
         assert filter_by_key(data, "a.b") == {"a.b": {"c": 1, "d": 2}}
+
+
+class TestUpdateJson:
+    def test_set_top_level_key(self):
+        data = {"name": "old"}
+        result = update_json(data, "name", "new")
+        assert result["name"] == "new"
+
+    def test_set_nested_key(self):
+        data = {"a": {"b": {"c": 1}}}
+        result = update_json(data, "a.b.c", 99)
+        assert result["a"]["b"]["c"] == 99
+
+    def test_add_new_key(self):
+        data = {"a": 1}
+        result = update_json(data, "b", 2)
+        assert result == {"a": 1, "b": 2}
+
+    def test_set_array_element(self):
+        data = {"items": ["a", "b", "c"]}
+        result = update_json(data, "items.1", "updated")
+        assert result["items"] == ["a", "updated", "c"]
+
+    def test_set_nested_in_array(self):
+        data = {"users": [{"name": "alice"}, {"name": "bob"}]}
+        result = update_json(data, "users.0.name", "alicia")
+        assert result["users"][0]["name"] == "alicia"
+
+    def test_set_dict_value(self):
+        data = {"config": {}}
+        result = update_json(data, "config", {"key": "value"})
+        assert result["config"] == {"key": "value"}
+
+    def test_array_index_out_of_range(self):
+        data = {"items": ["a"]}
+        with pytest.raises(KeyError, match="out of range"):
+            update_json(data, "items.5", "x")
+
+    def test_missing_intermediate_key(self):
+        data = {"a": 1}
+        with pytest.raises(KeyError, match="not found"):
+            update_json(data, "b.c", "x")
 
 
 class TestPrintJson:
