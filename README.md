@@ -19,7 +19,7 @@ A CLI tool for viewing and manipulating JSON files. Pretty-prints JSON with synt
 
 - **Python**
 - **Rich** for colored/syntax-highlighted output
-- **Click or Typer** for argument parsing
+- **Typer** for argument parsing
 
 ## Installation
 
@@ -50,13 +50,15 @@ jsp data.json --del obsoleteField
 jsp data.json --set config=@overrides.json
 
 # Same thing via stdin pipe
-cat overrides.json | jsp data.json --set config=-
+cat overrides.json | jsp data.json --set config=@-
+
+# Output compact JSON (single line, no highlighting)
+jsp data.json --compact
+jsp data.json -c
 
 # Pipe the result
-jsp data.json --set env=prod | kubectl apply -f -
+jsp data.json --set env=prod -c | kubectl apply -f -
 ```
-
-> Note: Command syntax is preliminary and subject to change.
 
 ## License
 
