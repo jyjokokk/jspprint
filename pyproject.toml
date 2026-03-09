@@ -5,13 +5,22 @@ description = "A CLI tool for viewing and manipulating JSON files"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-dependencies = [
-    "rich>=14.3.3",
-    "typer>=0.24.1",
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities",
 ]
+dependencies = ["rich>=14.3.3", "typer>=0.24.1"]
 
 [project.scripts]
 jsp = "jsp.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/jyjokokk/jsp"
+Repository = "https://github.com/jyjokokk/jsp"
 
 [build-system]
 requires = ["hatchling"]
@@ -20,11 +29,11 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/jsp"]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/jsp/", "README.md", "LICENSE", "pyproject.toml"]
+
 [dependency-groups]
-dev = [
-    "pytest>=9.0.2",
-    "ruff>=0.15.5",
-]
+dev = ["pytest>=9.0.2", "ruff>=0.15.5"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
