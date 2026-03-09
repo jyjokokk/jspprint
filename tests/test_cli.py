@@ -175,3 +175,50 @@ def test_set_from_file_when_stdin_is_primary_input():
     assert result.exit_code == 0
     parsed = json.loads(result.output)
     assert parsed["config"] == {"key": "from_file"}
+
+
+def test_invalid_json_stdin():
+    result = runner.invoke(app, input="not valid json")
+    assert result.exit_code != 0
+    assert "Invalid JSON" in result.output
+
+
+def test_set_json_object_value():
+    data = {"config": {}}
+    result = runner.invoke(
+        app, ["--compact", "--set", 'config={"one": "value", "two": 2}'],
+        input=json.dumps(data),
+    )
+    assert result.exit_code == 0
+    parsed = json.loads(result.output)
+    assert parsed["config"] == {"one": "value", "two": 2}
+
+
+def test_set_json_array_value():
+    data = {"items": []}
+    result = runner.invoke(
+        app, ["--compact", "--set", "items=[1, 2, 3]"], input=json.dumps(data)
+    )
+    assert result.exit_code == 0
+    parsed = json.loads(result.output)
+    assert parsed["items"] == [1, 2, 3]
+
+
+def test_set_json_number_value():
+    data = {"count": 0}
+    result = runner.invoke(
+        app, ["--compact", "--set", "count=42"], input=json.dumps(data)
+    )
+    assert result.exit_code == 0
+    parsed = json.loads(result.output)
+    assert parsed["count"] == 42
+
+
+def test_set_json_boolean_value():
+    data = {"enabled": True}
+    result = runner.invoke(
+        app, ["--compact", "--set", "enabled=false"], input=json.dumps(data)
+    )
+    assert result.exit_code == 0
+    parsed = json.loads(result.output)
+    assert parsed["enabled"] is False

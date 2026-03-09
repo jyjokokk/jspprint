@@ -11,12 +11,16 @@ console = Console()
 
 def read_json(file_path: str | None = None) -> dict:
     """Read JSON from a file path or stdin if no path is given."""
-    if file_path:
-        with open(file_path) as f:
-            return json.load(f)
+    try:
+        if file_path:
+            with open(file_path) as f:
+                return json.load(f)
 
-    if not sys.stdin.isatty():
-        return json.load(sys.stdin)
+        if not sys.stdin.isatty():
+            return json.load(sys.stdin)
+    except json.JSONDecodeError as e:
+        source = file_path or "stdin"
+        raise ValueError(f"Invalid JSON from {source}: {e}") from e
 
     raise ValueError("No input provided. Pass a file path or pipe JSON via stdin.")
 
