@@ -1,5 +1,5 @@
 [project]
-name = "jsp"
+name = "jspprint"
 version = "0.1.0"
 description = "A CLI tool for viewing and manipulating JSON files"
 readme = "README.md"
