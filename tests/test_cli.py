@@ -13,7 +13,7 @@ def test_read_from_file():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         f.flush()
-        result = runner.invoke(app, ["json", f.name])
+        result = runner.invoke(app, [f.name])
 
     assert result.exit_code == 0
     assert '"name"' in result.output
@@ -22,14 +22,14 @@ def test_read_from_file():
 
 def test_read_from_stdin():
     data = {"hello": "world"}
-    result = runner.invoke(app, ["json"], input=json.dumps(data))
+    result = runner.invoke(app, input=json.dumps(data))
     assert result.exit_code == 0
     assert '"hello"' in result.output
     assert '"world"' in result.output
 
 
 def test_no_input_shows_error():
-    result = runner.invoke(app, ["json"])
+    result = runner.invoke(app)
     assert result.exit_code != 0
 
 
@@ -37,26 +37,26 @@ def test_invalid_json_file():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         f.write("not valid json")
         f.flush()
-        result = runner.invoke(app, ["json", f.name])
+        result = runner.invoke(app, [f.name])
 
     assert result.exit_code != 0
 
 
 def test_nonexistent_file():
-    result = runner.invoke(app, ["json", "/tmp/does_not_exist_jsp_test.json"])
+    result = runner.invoke(app, ["/tmp/does_not_exist_jsp_test.json"])
     assert result.exit_code != 0
 
 
 def test_nested_json():
     data = {"a": {"b": {"c": "deep"}}}
-    result = runner.invoke(app, ["json"], input=json.dumps(data))
+    result = runner.invoke(app, input=json.dumps(data))
     assert result.exit_code == 0
     assert '"deep"' in result.output
 
 
 def test_compact_output():
     data = {"name": "test", "value": 42}
-    result = runner.invoke(app, ["json", "--compact"], input=json.dumps(data))
+    result = runner.invoke(app, ["--compact"], input=json.dumps(data))
     assert result.exit_code == 0
     assert "\n" not in result.output.strip()
 
@@ -66,7 +66,7 @@ def test_filter_by_key():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         f.flush()
-        result = runner.invoke(app, ["json", f.name, "name", "--compact"])
+        result = runner.invoke(app, [f.name, "name", "--compact"])
     assert result.exit_code == 0
     parsed = json.loads(result.output)
     assert parsed == {"name": "test"}
@@ -77,7 +77,7 @@ def test_filter_by_nested_key():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         f.flush()
-        result = runner.invoke(app, ["json", f.name, "a.b.c", "--compact"])
+        result = runner.invoke(app, [f.name, "a.b.c", "--compact"])
     assert result.exit_code == 0
     parsed = json.loads(result.output)
     assert parsed == {"a.b.c": "deep"}
@@ -88,13 +88,13 @@ def test_filter_missing_key():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         f.flush()
-        result = runner.invoke(app, ["json", f.name, "missing"])
+        result = runner.invoke(app, [f.name, "missing"])
     assert result.exit_code != 0
 
 
 def test_set_value():
     data = {"name": "old", "value": 1}
-    result = runner.invoke(app, ["json", "--compact", "--set", "name=new"], input=json.dumps(data))
+    result = runner.invoke(app, ["--compact", "--set", "name=new"], input=json.dumps(data))
     assert result.exit_code == 0
     parsed = json.loads(result.output)
     assert parsed["name"] == "new"
@@ -103,7 +103,7 @@ def test_set_value():
 def test_set_json_value():
     data = {"config": {}}
     result = runner.invoke(
-        app, ["json", "--compact", "--set", 'config={"a":1}'], input=json.dumps(data)
+        app, ["--compact", "--set", 'config={"a":1}'], input=json.dumps(data)
     )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -117,7 +117,7 @@ def test_set_from_file():
         json.dump(override, f)
         f.flush()
         result = runner.invoke(
-            app, ["json", "--compact", "--set", f"config=@{f.name}"], input=json.dumps(data)
+            app, ["--compact", "--set", f"config=@{f.name}"], input=json.dumps(data)
         )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -126,7 +126,7 @@ def test_set_from_file():
 
 def test_delete_key():
     data = {"name": "test", "value": 42}
-    result = runner.invoke(app, ["json", "--compact", "--del", "value"], input=json.dumps(data))
+    result = runner.invoke(app, ["--compact", "--del", "value"], input=json.dumps(data))
     assert result.exit_code == 0
     parsed = json.loads(result.output)
     assert "value" not in parsed
@@ -135,7 +135,7 @@ def test_delete_key():
 
 def test_delete_missing_key():
     data = {"name": "test"}
-    result = runner.invoke(app, ["json", "--del", "missing"], input=json.dumps(data))
+    result = runner.invoke(app, ["--del", "missing"], input=json.dumps(data))
     assert result.exit_code != 0
 
 
@@ -147,7 +147,7 @@ def test_set_from_stdin_with_file_input():
         json.dump(data, f)
         f.flush()
         result = runner.invoke(
-            app, ["json", f.name, "--compact", "--set", "config=@-"], input=json.dumps(override)
+            app, [f.name, "--compact", "--set", "config=@-"], input=json.dumps(override)
         )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -157,7 +157,7 @@ def test_set_from_stdin_with_file_input():
 def test_set_from_stdin_when_stdin_is_primary_input():
     """When stdin is primary input, @- should error."""
     data = {"config": {}}
-    result = runner.invoke(app, ["json", "--set", "config=@-"], input=json.dumps(data))
+    result = runner.invoke(app, ["--set", "config=@-"], input=json.dumps(data))
     assert result.exit_code != 0
     assert "stdin" in result.output.lower()
 
@@ -170,7 +170,7 @@ def test_set_from_file_when_stdin_is_primary_input():
         json.dump(override, f)
         f.flush()
         result = runner.invoke(
-            app, ["json", "--compact", "--set", f"config=@{f.name}"], input=json.dumps(data)
+            app, ["--compact", "--set", f"config=@{f.name}"], input=json.dumps(data)
         )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -178,7 +178,7 @@ def test_set_from_file_when_stdin_is_primary_input():
 
 
 def test_invalid_json_stdin():
-    result = runner.invoke(app, ["json"], input="not valid json")
+    result = runner.invoke(app, input="not valid json")
     assert result.exit_code != 0
     assert "Invalid JSON" in result.output
 
@@ -186,7 +186,7 @@ def test_invalid_json_stdin():
 def test_set_json_object_value():
     data = {"config": {}}
     result = runner.invoke(
-        app, ["json", "--compact", "--set", 'config={"one": "value", "two": 2}'],
+        app, ["--compact", "--set", 'config={"one": "value", "two": 2}'],
         input=json.dumps(data),
     )
     assert result.exit_code == 0
@@ -197,7 +197,7 @@ def test_set_json_object_value():
 def test_set_json_array_value():
     data = {"items": []}
     result = runner.invoke(
-        app, ["json", "--compact", "--set", "items=[1, 2, 3]"], input=json.dumps(data)
+        app, ["--compact", "--set", "items=[1, 2, 3]"], input=json.dumps(data)
     )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -207,7 +207,7 @@ def test_set_json_array_value():
 def test_set_json_number_value():
     data = {"count": 0}
     result = runner.invoke(
-        app, ["json", "--compact", "--set", "count=42"], input=json.dumps(data)
+        app, ["--compact", "--set", "count=42"], input=json.dumps(data)
     )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -217,7 +217,7 @@ def test_set_json_number_value():
 def test_set_json_boolean_value():
     data = {"enabled": True}
     result = runner.invoke(
-        app, ["json", "--compact", "--set", "enabled=false"], input=json.dumps(data)
+        app, ["--compact", "--set", "enabled=false"], input=json.dumps(data)
     )
     assert result.exit_code == 0
     parsed = json.loads(result.output)
@@ -231,30 +231,31 @@ def test_csv_from_file():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
         f.write("name,age\nAlice,30\nBob,25\n")
         f.flush()
-        result = runner.invoke(app, ["csv", f.name])
+        result = runner.invoke(app, ["--csv", f.name])
     assert result.exit_code == 0
     assert "Alice" in result.output
     assert "Bob" in result.output
-
-
-def test_csv_from_stdin():
-    result = runner.invoke(app, ["csv"], input="x,y\n1,2\n")
-    assert result.exit_code == 0
-    assert "1" in result.output
-    assert "2" in result.output
 
 
 def test_csv_custom_delimiter():
     with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
         f.write("a;b;c\n1;2;3\n")
         f.flush()
-        result = runner.invoke(app, ["csv", f.name, "-D", ";"])
+        result = runner.invoke(app, ["--csv", "-D", ";", f.name])
     assert result.exit_code == 0
     assert "1" in result.output
 
 
 def test_csv_no_header():
-    result = runner.invoke(app, ["csv", "--no-header"], input="1,2,3\n4,5,6\n")
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
+        f.write("1,2,3\n4,5,6\n")
+        f.flush()
+        result = runner.invoke(app, ["--csv", "--no-header", f.name])
     assert result.exit_code == 0
     assert "1" in result.output
     assert "4" in result.output
+
+
+def test_csv_requires_file():
+    result = runner.invoke(app, ["--csv"])
+    assert result.exit_code != 0

@@ -63,20 +63,13 @@ def filter_by_key(data: dict, key: str) -> dict:
     return {key: _traverse(data, key)}
 
 
-def read_csv(file_path: str | None = None, delimiter: str = ",") -> list[list[str]]:
-    """Read CSV from a file path or stdin if no path is given."""
+def read_csv(file_path: str, delimiter: str = ",") -> list[list[str]]:
+    """Read CSV from a file path."""
     try:
-        if file_path:
-            with open(file_path, newline="") as f:
-                return list(csv.reader(f, delimiter=delimiter))
-
-        if not sys.stdin.isatty():
-            return list(csv.reader(sys.stdin, delimiter=delimiter))
+        with open(file_path, newline="") as f:
+            return list(csv.reader(f, delimiter=delimiter))
     except csv.Error as e:
-        source = file_path or "stdin"
-        raise ValueError(f"Invalid CSV from {source}: {e}") from e
-
-    raise ValueError("No input provided. Pass a file path or pipe CSV via stdin.")
+        raise ValueError(f"Invalid CSV from {file_path}: {e}") from e
 
 
 def print_csv(rows: list[list[str]], header: bool = True) -> None:

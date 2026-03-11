@@ -6,19 +6,13 @@ import typer
 
 from jspprint.io import filter_by_key, print_csv, print_json, read_csv, read_json, update_json
 
-app = typer.Typer(invoke_without_command=True)
+app = typer.Typer()
 
 
-@app.callback(invoke_without_command=True)
-def default(_ctx: typer.Context) -> None:
-    """A CLI tool for viewing and manipulating JSON and CSV files."""
-    pass
-
-
-@app.command(name="json")
-def json_cmd(
+@app.command()
+def main(
     file: Optional[str] = typer.Argument(
-        None, help="Path to a JSON file. Reads from stdin if omitted."
+        None, help="Path to a JSON or CSV file. Reads from stdin if omitted (JSON only)."
     ),
     key: Optional[str] = typer.Argument(
         None, help="Key to filter by, using dot notation (e.g. users.0.email)."
@@ -32,8 +26,27 @@ def json_cmd(
     delete: Optional[list[str]] = typer.Option(
         None, "--del", "-d", help="Delete a key from the output."
     ),
+    csv_mode: bool = typer.Option(
+        False, "--csv", help="Read a CSV file and print it as a formatted table."
+    ),
+    delimiter: str = typer.Option(
+        ",", "--delimiter", "-D", help="Column delimiter for CSV mode."
+    ),
+    no_header: bool = typer.Option(
+        False, "--no-header", "-n", help="Treat first CSV row as data, not a header."
+    ),
 ) -> None:
-    """View and manipulate JSON files."""
+    """A CLI tool for viewing and manipulating JSON files."""
+    if csv_mode:
+        if not file:
+            raise typer.BadParameter("A file path is required for CSV mode.")
+        try:
+            rows = read_csv(file, delimiter=delimiter)
+        except ValueError as e:
+            raise typer.BadParameter(str(e)) from e
+        print_csv(rows, header=not no_header)
+        return
+
     stdin_used = file is None
     try:
         data = read_json(file)
@@ -85,27 +98,6 @@ def json_cmd(
             raise typer.BadParameter(str(e)) from e
 
     print_json(data, pretty=not compact)
-
-
-@app.command()
-def csv(
-    file: Optional[str] = typer.Argument(
-        None, help="Path to a CSV file. Reads from stdin if omitted."
-    ),
-    delimiter: str = typer.Option(
-        ",", "--delimiter", "-D", help="Column delimiter character."
-    ),
-    no_header: bool = typer.Option(
-        False, "--no-header", "-n", help="Treat first row as data, not a header."
-    ),
-) -> None:
-    """Read a CSV file and print it as a formatted table."""
-    try:
-        rows = read_csv(file, delimiter=delimiter)
-    except ValueError as e:
-        raise typer.BadParameter(str(e)) from e
-
-    print_csv(rows, header=not no_header)
 
 
 if __name__ == "__main__":
